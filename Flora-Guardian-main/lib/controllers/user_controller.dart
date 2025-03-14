@@ -12,29 +12,16 @@ class UserController {
   }
 
   Future<String?> login(String email, String password) async {
-    // Pre-validate email and password
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      return "Please enter a valid email address.";
-    }
-
-    if (password.isEmpty || password.length < 6) {
-      return "Password must be at least 6 characters long.";
-    }
-
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return null; // Success
+      return null; // success
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        return 'User not found. Please check your email.';
+        return 'User not found';
       } else if (e.code == 'wrong-password') {
-        return 'Incorrect password. Please try again.';
-      } else if (e.code == 'invalid-credential') {
-        return 'Invalid email or password. Please check your credentials.';
+        return 'Wrong password';
       }
       return 'Login failed: ${e.message}';
-    } catch (e) {
-      return 'An unexpected error occurred. Please try again.';
     }
   }
 
