@@ -274,6 +274,7 @@ Future<void> _addFlowerToProfile(FlowerModel flower) async {
               hintText: "Search 'Rose'",
               controller: searchController,
               onChanged: _onSearchChanged,
+              decoration: BoxDecoration(),
             ),
           ),
           isLoading

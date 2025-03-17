@@ -11,7 +11,7 @@ class SearchBarField extends StatelessWidget {
     this.prefixIcon,
     required this.hintText,
     required this.controller,
-    this.onChanged,
+    this.onChanged, required BoxDecoration decoration,
   });
 
   @override

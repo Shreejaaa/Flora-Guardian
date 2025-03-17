@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Profile",
+          "Flora Guardian",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [

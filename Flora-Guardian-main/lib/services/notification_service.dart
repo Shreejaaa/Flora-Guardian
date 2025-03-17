@@ -55,10 +55,13 @@ class NotificationService {
       android: initSettingAndroid,
       iOS: initSettingIOS,
     );
-    await notificationPlugin.initialize(initSetting).then((_) {
+
+    await notificationPlugin.initialize(initSetting).then((_) async {
       _isInitialized = true;
-      _scheduleWaterPlantNotification();
-      _scheduleCheckPlantNotification();
+      // Cancel all existing notifications before scheduling new ones
+      await notificationPlugin.cancelAll();
+      await _scheduleWaterPlantNotification();
+      await _scheduleCheckPlantNotification();
     });
   }
 
@@ -89,30 +92,34 @@ class NotificationService {
       return;
     }
 
-    final now = DateTime.now();
-    var scheduledTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      16,
-      0,
-    ); // 4:00 PM
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledTime = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        16, // 4:00 PM
+        0,
+      );
 
-    if (scheduledTime.isBefore(now)) {
-      scheduledTime = scheduledTime.add(const Duration(days: 1));
+      // If time has passed for today, schedule for tomorrow
+      if (scheduledTime.isBefore(now)) {
+        scheduledTime = scheduledTime.add(const Duration(days: 1));
+      }
+
+      await notificationPlugin.zonedSchedule(
+        1,
+        'Water Plant',
+        'Don\'t forget to water your plant',
+        scheduledTime,
+        _notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time, // ✅ Updated
+      );
+    } catch (e) {
+      ('Error scheduling water plant notification: $e');
     }
-
-    await notificationPlugin.zonedSchedule(
-      1,
-      'Water Plant',
-      'Don\'t forget to water your plant',
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      _notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
   }
 
   Future<void> _scheduleCheckPlantNotification() async {
@@ -120,24 +127,34 @@ class NotificationService {
       return;
     }
 
-    final now = DateTime.now();
-    var scheduledTime = DateTime(now.year, now.month, now.day, 6, 0); // 6:00 AM
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduledTime = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        6, // 6:00 AM
+        0,
+      );
 
-    if (scheduledTime.isBefore(now)) {
-      scheduledTime = scheduledTime.add(const Duration(days: 1));
+      // If time has passed for today, schedule for tomorrow
+      if (scheduledTime.isBefore(now)) {
+        scheduledTime = scheduledTime.add(const Duration(days: 1));
+      }
+
+      await notificationPlugin.zonedSchedule(
+        2,
+        'Check your plant',
+        'Don\'t forget to check the plant health condition',
+        scheduledTime,
+        _notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time, // ✅ Updated
+      );
+    } catch (e) {
+      ('Error scheduling check plant notification: $e');
     }
-
-    await notificationPlugin.zonedSchedule(
-      2,
-      'Check your plant',
-      "Don't forget to check the plant's health condition",
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      _notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
   }
 }
 

@@ -3,8 +3,9 @@ import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart'; // For TensorFlow Lite
 import 'dart:io'; // For File class
-import 'package:image/image.dart'; // For image processing
+import 'package:image/image.dart' as img; // For image processing
 import '../custom_widgets/scanner_frame_painter.dart';
+import 'flower_result_page.dart'; // Import the new page
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -21,6 +22,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   final ImagePicker _imagePicker = ImagePicker();
   Interpreter? _interpreter;
   bool _isModelLoaded = false;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -61,16 +63,16 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
   }
 
-  Future<String> _classifyImage(String imagePath) async {
-    if (_interpreter == null) return 'Model not loaded';
+  Future<Map<String, dynamic>> _classifyImage(String imagePath) async {
+    if (_interpreter == null) return {'error': 'Model not loaded'};
 
     // Load and preprocess the image
     final imageBytes = File(imagePath).readAsBytesSync();
-    final image = decodeImage(imageBytes);
-    if (image == null) return 'Failed to decode image';
+    final image = img.decodeImage(imageBytes);
+    if (image == null) return {'error': 'Failed to decode image'};
 
     // Resize the image to 180x180
-    final resizedImage = copyResize(image, width: 180, height: 180);
+    final resizedImage = img.copyResize(image, width: 180, height: 180);
 
     // Convert the image to a normalized input array
     final input = List.filled(180 * 180 * 3, 0.0).reshape([1, 180, 180, 3]);
@@ -88,25 +90,120 @@ class _ScannerScreenState extends State<ScannerScreen>
     _interpreter!.run(input, output);
 
     // Get the prediction
-    return getPrediction(output.cast<List<double>>());
+    return _getPrediction(output.cast<List<double>>(), imagePath);
   }
-String getPrediction(List<List<double>> output) {
-  final flowerNames = ['daisy', 'dandelion', 'iris', 'rose', 'sunflower'];
+  
+  Map<String, dynamic> _getPrediction(List<List<double>> output, String imagePath) {
+    final flowerNames = ['daisy', 'dandelion', 'iris', 'rose', 'sunflower'];
 
-  // Ensure output[0] is not empty
-  if (output.isEmpty || output[0].isEmpty) {
-    return 'No prediction available.';
+    // Ensure output[0] is not empty
+    if (output.isEmpty || output[0].isEmpty) {
+      return {'error': 'No prediction available.'};
+    }
+
+    // Find the index of the maximum value in output[0]
+    final predictedIndex = output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
+
+    // Calculate confidence percentage
+    final confidence = output[0][predictedIndex] * 100;
+
+    // Return the result
+    return {
+      'flowerName': flowerNames[predictedIndex],
+      'confidence': confidence,
+      'imagePath': imagePath,
+    };
+  }
+  
+  Future<void> _takePicture() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized || _isProcessing) {
+      return;
+    }
+    
+    setState(() => _isProcessing = true);
+    
+    try {
+      final XFile picture = await _cameraController!.takePicture();
+      final result = await _classifyImage(picture.path);
+      
+      if (result.containsKey('error')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'])),
+        );
+        return;
+      }
+      
+      if (!mounted) return;
+      
+      // Navigate to result page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FlowerResultPage(
+            flowerName: result['flowerName'],
+            imagePath: result['imagePath'],
+            confidence: result['confidence'],
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error taking picture: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error capturing image: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+  
+  Future<void> _pickFromGallery() async {
+    if (_isProcessing) return;
+    
+    setState(() => _isProcessing = true);
+    
+    try {
+      final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) {
+        setState(() => _isProcessing = false);
+        return;
+      }
+      
+      final result = await _classifyImage(pickedFile.path);
+      
+      if (result.containsKey('error')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'])),
+        );
+        return;
+      }
+      
+      if (!mounted) return;
+      
+      // Navigate to result page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FlowerResultPage(
+            flowerName: result['flowerName'],
+            imagePath: result['imagePath'],
+            confidence: result['confidence'],
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error selecting image: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
-  // Find the index of the maximum value in output[0]
-  final predictedIndex = output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
-
-  // Calculate confidence percentage
-  final confidence = output[0][predictedIndex] * 100;
-
-  // Return the result
-  return 'The image belongs to ${flowerNames[predictedIndex]} with a score of ${confidence.toStringAsFixed(2)}%';
-}
   @override
   void dispose() {
     _animationController.dispose();
@@ -122,7 +219,12 @@ String getPrediction(List<List<double>> output) {
     final cameraSize = scannerSize * 0.9;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Plant Scanner")),
+      appBar: AppBar(
+        title: const Text("Plant Scanner"),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black,
+      ),
       body: SafeArea(
         child: Center(
           child: Column(
@@ -161,33 +263,67 @@ String getPrediction(List<List<double>> output) {
                       },
                     ),
                   ),
+                  // Floating capture button
+                  if (_isCameraInitialized && !_isProcessing)
+                    Positioned(
+                      bottom: 20,
+                      child: GestureDetector(
+                        onTap: _takePicture,
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 36,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Processing indicator
+                  if (_isProcessing)
+                    const CircularProgressIndicator(),
                 ],
               ),
               const SizedBox(height: 30),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: TextButton(
-                  onPressed: () async {
-                    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
-                    if (pickedFile != null) {
-                      final result = await _classifyImage(pickedFile.path);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(result)),
-                      );
-                    }
-                  },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Upload from gallery ",
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      Icon(Icons.image),
-                    ],
+              ElevatedButton.icon(
+                onPressed: _isProcessing ? null : _pickFromGallery,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: Colors.green.shade100,
+                  foregroundColor: Colors.black87,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                icon: const Icon(Icons.photo_library),
+                label: const Text("Choose from gallery"),
               ),
+              const SizedBox(height: 20),
+              if (!_isModelLoaded)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    "Loading flower recognition model...",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

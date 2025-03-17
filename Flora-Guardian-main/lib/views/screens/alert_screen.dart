@@ -19,7 +19,7 @@ class AlertScreen extends StatelessWidget {
           );
         },
       ),
-      appBar: AppBar(title: Text("Notifications")),
+      appBar: AppBar(title: Text("Flora Guardian")),
       body: SafeArea(
         child: ListView.builder(
           itemCount: notifications.length,

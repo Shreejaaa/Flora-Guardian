@@ -100,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               hintText: "Search 'Rose'",
               controller: searchController,
               onChanged: _onSearchChanged,
+              decoration: BoxDecoration(),
             ),
           ),
 
