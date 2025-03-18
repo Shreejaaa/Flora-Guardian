@@ -8,23 +8,20 @@ class NotificationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      margin: EdgeInsets.only(bottom: 8, left: 14, right: 14),
-      decoration: BoxDecoration(
-        color: Colors.black12,
-        borderRadius: BorderRadius.circular(18),
-      ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Icon(
-          Icons.notifications_active_rounded,
-          color: Colors.black,
-          size: 32,
-        ),
-        title: Text(notification.title, style: TextStyle(fontSize: 20)),
-        subtitle: Text(
-          "${notification.body}\nTime: ${notification.time.format(context)}",
-          style: TextStyle(fontSize: 14),
+        title: Text(notification.title),
+        subtitle: Text(notification.body),
+        trailing: IconButton(
+          icon: const Icon(Icons.check, color: Colors.green),
+          onPressed: () async {
+            final notificationService = NotificationService();
+            await notificationService.deleteReminder(notification.id.toString());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Reminder marked as completed')),
+            );
+          },
         ),
       ),
     );

@@ -8,7 +8,7 @@ class ScannerFramePainter extends CustomPainter {
   ScannerFramePainter({
     required this.scanLineY,
     this.borderRadius = 20,
-    this.cornerLength = 60, // Add corner length parameter
+    this.cornerLength = 60, required MaterialColor color, // Add corner length parameter
   });
 
   @override

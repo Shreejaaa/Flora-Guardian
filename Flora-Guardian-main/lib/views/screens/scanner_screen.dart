@@ -5,7 +5,8 @@ import 'package:tflite_flutter/tflite_flutter.dart'; // For TensorFlow Lite
 import 'dart:io'; // For File class
 import 'package:image/image.dart' as img; // For image processing
 import '../custom_widgets/scanner_frame_painter.dart';
-import 'flower_result_page.dart'; // Import the new page
+import 'flower_result_page.dart'; // Import the flower result page
+import 'disease_result_page.dart'; // Import the disease detection page
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -23,6 +24,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   Interpreter? _interpreter;
   bool _isModelLoaded = false;
   bool _isProcessing = false;
+  bool _isFlowerMode = true; // Toggle between flower and disease detection
 
   @override
   void initState() {
@@ -124,28 +126,46 @@ class _ScannerScreenState extends State<ScannerScreen>
     
     try {
       final XFile picture = await _cameraController!.takePicture();
-      final result = await _classifyImage(picture.path);
       
-      if (result.containsKey('error')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['error'])),
-        );
-        return;
-      }
-      
-      if (!mounted) return;
-      
-      // Navigate to result page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FlowerResultPage(
-            flowerName: result['flowerName'],
-            imagePath: result['imagePath'],
-            confidence: result['confidence'],
+      if (_isFlowerMode) {
+        // Original flower recognition logic
+        final result = await _classifyImage(picture.path);
+        
+        if (result.containsKey('error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['error'])),
+          );
+          setState(() => _isProcessing = false);
+          return;
+        }
+        
+        if (!mounted) return;
+        
+        // Navigate to flower result page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FlowerResultPage(
+              flowerName: result['flowerName'],
+              imagePath: result['imagePath'],
+              confidence: result['confidence'],
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Disease detection mode
+        if (!mounted) return;
+        
+        // Navigate to disease detection page directly
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DiseaseResultPage(
+              imagePath: picture.path,
+            ),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error taking picture: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,28 +190,45 @@ class _ScannerScreenState extends State<ScannerScreen>
         return;
       }
       
-      final result = await _classifyImage(pickedFile.path);
-      
-      if (result.containsKey('error')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['error'])),
-        );
-        return;
-      }
-      
-      if (!mounted) return;
-      
-      // Navigate to result page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FlowerResultPage(
-            flowerName: result['flowerName'],
-            imagePath: result['imagePath'],
-            confidence: result['confidence'],
+      if (_isFlowerMode) {
+        // Original flower recognition logic
+        final result = await _classifyImage(pickedFile.path);
+        
+        if (result.containsKey('error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['error'])),
+          );
+          setState(() => _isProcessing = false);
+          return;
+        }
+        
+        if (!mounted) return;
+        
+        // Navigate to flower result page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FlowerResultPage(
+              flowerName: result['flowerName'],
+              imagePath: result['imagePath'],
+              confidence: result['confidence'],
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Disease detection mode
+        if (!mounted) return;
+        
+        // Navigate to disease detection page directly
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DiseaseResultPage(
+              imagePath: pickedFile.path,
+            ),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error picking image: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -220,7 +257,7 @@ class _ScannerScreenState extends State<ScannerScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Plant Scanner"),
+        title: Text(_isFlowerMode ? "Flower Scanner" : "Disease Scanner"),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
@@ -231,9 +268,39 @@ class _ScannerScreenState extends State<ScannerScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "Flower Scanner",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              // Mode toggle switch
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Mode: ",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Switch(
+                      value: _isFlowerMode,
+                      onChanged: (value) {
+                        setState(() {
+                          _isFlowerMode = value;
+                        });
+                      },
+                      activeColor: Colors.green,
+                      activeTrackColor: Colors.green.shade100,
+                      inactiveThumbColor: Colors.orange,
+                      inactiveTrackColor: Colors.orange.shade100,
+                    ),
+                    Text(
+                      _isFlowerMode ? "Flower Recognition" : "Disease Detection",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _isFlowerMode ? "Flower Scanner" : "Plant Disease Scanner",
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Stack(
@@ -257,6 +324,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                         return CustomPaint(
                           painter: ScannerFramePainter(
                             scanLineY: (scannerSize * _animationController.value),
+                            color: _isFlowerMode ? Colors.green : Colors.orange,
                           ),
                           child: Container(),
                         );
@@ -275,7 +343,10 @@ class _ScannerScreenState extends State<ScannerScreen>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.8),
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
+                            border: Border.all(
+                              color: _isFlowerMode ? Colors.green : Colors.orange,
+                              width: 3,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.2),
@@ -284,17 +355,19 @@ class _ScannerScreenState extends State<ScannerScreen>
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.camera_alt,
                             size: 36,
-                            color: Colors.black87,
+                            color: _isFlowerMode ? Colors.green.shade800 : Colors.orange.shade800,
                           ),
                         ),
                       ),
                     ),
                   // Processing indicator
                   if (_isProcessing)
-                    const CircularProgressIndicator(),
+                    CircularProgressIndicator(
+                      color: _isFlowerMode ? Colors.green : Colors.orange,
+                    ),
                 ],
               ),
               const SizedBox(height: 30),
@@ -302,7 +375,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 onPressed: _isProcessing ? null : _pickFromGallery,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  backgroundColor: Colors.green.shade100,
+                  backgroundColor: _isFlowerMode ? Colors.green.shade100 : Colors.orange.shade100,
                   foregroundColor: Colors.black87,
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -313,7 +386,18 @@ class _ScannerScreenState extends State<ScannerScreen>
                 label: const Text("Choose from gallery"),
               ),
               const SizedBox(height: 20),
-              if (!_isModelLoaded)
+              if (!_isFlowerMode && !_isModelLoaded)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    "Note: Disease detection uses cloud API - internet connection required",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              if (_isFlowerMode && !_isModelLoaded)
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(

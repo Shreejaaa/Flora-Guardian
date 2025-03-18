@@ -33,6 +33,9 @@ dependencies:
   logger: ^2.0.0  # Properly indented at the same level as `flutter:`
   tflite_flutter: ^0.11.0
   image: ^4.0.17  # Add this line
+  overlay_support: ^2.1.0
+  audioplayers: ^6.4.0
+
 
 
   # The following adds the Cupertino Icons font to your application.
