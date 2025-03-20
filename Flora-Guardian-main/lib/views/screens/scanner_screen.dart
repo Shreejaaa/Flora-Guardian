@@ -50,12 +50,10 @@ class _ScannerScreenState extends State<ScannerScreen>
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) return;
-
       _cameraController = CameraController(
         cameras.first,
         ResolutionPreset.medium,
       );
-
       await _cameraController!.initialize();
       if (mounted) {
         setState(() => _isCameraInitialized = true);
@@ -67,15 +65,12 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   Future<Map<String, dynamic>> _classifyImage(String imagePath) async {
     if (_interpreter == null) return {'error': 'Model not loaded'};
-
     // Load and preprocess the image
     final imageBytes = File(imagePath).readAsBytesSync();
     final image = img.decodeImage(imageBytes);
     if (image == null) return {'error': 'Failed to decode image'};
-
     // Resize the image to 180x180
     final resizedImage = img.copyResize(image, width: 180, height: 180);
-
     // Convert the image to a normalized input array
     final input = List.filled(180 * 180 * 3, 0.0).reshape([1, 180, 180, 3]);
     for (int y = 0; y < 180; y++) {
@@ -86,29 +81,24 @@ class _ScannerScreenState extends State<ScannerScreen>
         input[0][y][x][2] = pixel.b / 255.0; // Normalize blue channel
       }
     }
-
     // Run inference
     final output = List.filled(1 * 5, 0.0).reshape([1, 5]);
     _interpreter!.run(input, output);
-
     // Get the prediction
     return _getPrediction(output.cast<List<double>>(), imagePath);
   }
-  
+
   Map<String, dynamic> _getPrediction(List<List<double>> output, String imagePath) {
     final flowerNames = ['daisy', 'dandelion', 'iris', 'rose', 'sunflower'];
-
     // Ensure output[0] is not empty
     if (output.isEmpty || output[0].isEmpty) {
       return {'error': 'No prediction available.'};
     }
-
     // Find the index of the maximum value in output[0]
-    final predictedIndex = output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
-
+    final predictedIndex =
+        output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
     // Calculate confidence percentage
     final confidence = output[0][predictedIndex] * 100;
-
     // Return the result
     return {
       'flowerName': flowerNames[predictedIndex],
@@ -116,21 +106,19 @@ class _ScannerScreenState extends State<ScannerScreen>
       'imagePath': imagePath,
     };
   }
-  
+
   Future<void> _takePicture() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized || _isProcessing) {
+    if (_cameraController == null ||
+        !_cameraController!.value.isInitialized ||
+        _isProcessing) {
       return;
     }
-    
     setState(() => _isProcessing = true);
-    
     try {
       final XFile picture = await _cameraController!.takePicture();
-      
       if (_isFlowerMode) {
         // Original flower recognition logic
         final result = await _classifyImage(picture.path);
-        
         if (result.containsKey('error')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(result['error'])),
@@ -138,9 +126,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           setState(() => _isProcessing = false);
           return;
         }
-        
         if (!mounted) return;
-        
         // Navigate to flower result page
         Navigator.push(
           context,
@@ -155,7 +141,6 @@ class _ScannerScreenState extends State<ScannerScreen>
       } else {
         // Disease detection mode
         if (!mounted) return;
-        
         // Navigate to disease detection page directly
         Navigator.push(
           context,
@@ -177,23 +162,20 @@ class _ScannerScreenState extends State<ScannerScreen>
       }
     }
   }
-  
+
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
-    
     setState(() => _isProcessing = true);
-    
     try {
-      final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+      final pickedFile =
+          await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile == null) {
         setState(() => _isProcessing = false);
         return;
       }
-      
       if (_isFlowerMode) {
         // Original flower recognition logic
         final result = await _classifyImage(pickedFile.path);
-        
         if (result.containsKey('error')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(result['error'])),
@@ -201,9 +183,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           setState(() => _isProcessing = false);
           return;
         }
-        
         if (!mounted) return;
-        
         // Navigate to flower result page
         Navigator.push(
           context,
@@ -218,7 +198,6 @@ class _ScannerScreenState extends State<ScannerScreen>
       } else {
         // Disease detection mode
         if (!mounted) return;
-        
         // Navigate to disease detection page directly
         Navigator.push(
           context,
@@ -256,21 +235,58 @@ class _ScannerScreenState extends State<ScannerScreen>
     final cameraSize = scannerSize * 0.9;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isFlowerMode ? "Flower Scanner" : "Disease Scanner"),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-      ),
-      body: SafeArea(
-        child: Center(
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.green.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // App Bar
+              AppBar(
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                centerTitle: false,
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.local_florist,
+                      color: Colors.green.shade800,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Flora Guardian",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.info_outline, color: Colors.green.shade800),
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 16),
+                ],
+              ),
+
               // Mode toggle switch
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -292,7 +308,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                     ),
                     Text(
                       _isFlowerMode ? "Flower Recognition" : "Disease Detection",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ],
                 ),
@@ -344,7 +361,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                             color: Colors.white.withOpacity(0.8),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _isFlowerMode ? Colors.green : Colors.orange,
+                              color:
+                                  _isFlowerMode ? Colors.green : Colors.orange,
                               width: 3,
                             ),
                             boxShadow: [
@@ -358,7 +376,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                           child: Icon(
                             Icons.camera_alt,
                             size: 36,
-                            color: _isFlowerMode ? Colors.green.shade800 : Colors.orange.shade800,
+                            color: _isFlowerMode
+                                ? Colors.green.shade800
+                                : Colors.orange.shade800,
                           ),
                         ),
                       ),
@@ -374,8 +394,11 @@ class _ScannerScreenState extends State<ScannerScreen>
               ElevatedButton.icon(
                 onPressed: _isProcessing ? null : _pickFromGallery,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  backgroundColor: _isFlowerMode ? Colors.green.shade100 : Colors.orange.shade100,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: _isFlowerMode
+                      ? Colors.green.shade100
+                      : Colors.orange.shade100,
                   foregroundColor: Colors.black87,
                   elevation: 2,
                   shape: RoundedRectangleBorder(

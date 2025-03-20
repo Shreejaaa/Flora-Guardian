@@ -11,7 +11,7 @@ class EditProfileTextField extends StatelessWidget {
     required this.initialValue,
     this.obscureText = false,
     required this.controller,
-    this.validator,
+    this.validator, required IconData prefixIcon, required String labelText,
   });
 
   @override

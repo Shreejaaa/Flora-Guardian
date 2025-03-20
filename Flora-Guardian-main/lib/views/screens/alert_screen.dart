@@ -34,19 +34,42 @@ class _AlertScreenState extends State<AlertScreen> {
   }
 
   void _showInAppAlert(ScheduledNotification reminder) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(reminder.title),
-        content: Text(reminder.body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    // showDialog(
+    //   context: context,
+    //   builder: (context) => AlertDialog(
+        // insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10), // Add padding
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(16),
+  //       ),
+  //       title: Text(
+  //         reminder.title,
+  //         style: TextStyle(
+  //           fontSize: 18,
+  //           fontWeight: FontWeight.bold,
+  //           color: Colors.green.shade900,
+  //         ),
+  //       ),
+  //       content: Text(
+  //         reminder.body,
+  //         style: TextStyle(
+  //           fontSize: 16,
+  //           color: Colors.grey.shade700,
+  //         ),
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: Text(
+  //             'OK',
+  //             style: TextStyle(
+  //               color: Colors.green.shade700,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
   }
 
   @override
@@ -54,12 +77,33 @@ class _AlertScreenState extends State<AlertScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text('Reminders'),
-        backgroundColor: Colors.green.shade700,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: false,
+        title: Row(
+          children: [
+            Icon(
+              Icons.local_florist,
+              color: Colors.green.shade800,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              "Flora Guardian",
+              style: TextStyle(
+                color: Colors.green.shade800,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: Icon(Icons.add, color: Colors.green.shade800),
             onPressed: () {
               Navigator.push(
                 context,
@@ -69,34 +113,64 @@ class _AlertScreenState extends State<AlertScreen> {
               );
             },
           ),
+          const SizedBox(width: 16),
         ],
       ),
-      body: FutureBuilder<List<ScheduledNotification>>(
-        future: notificationService.fetchRemindersFromFirestore(user!.uid),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text(
-                'No reminders set.',
-                style: TextStyle(fontSize: 18),
-              ),
-            );
-          } else {
-            final reminders = snapshot.data!;
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: reminders.length,
-              itemBuilder: (context, index) {
-                return NotificationList(notification: reminders[index]);
-              },
-            );
-          }
-        },
-      ),
+     body: FutureBuilder<List<ScheduledNotification>>(
+  future: notificationService.fetchRemindersFromFirestore(user!.uid),
+  builder: (context, snapshot) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 100), // Add this line to push content below the app bar
+      child: snapshot.connectionState == ConnectionState.waiting
+          ? Center(
+              child: CircularProgressIndicator(color: Colors.green.shade700),
+            )
+          : snapshot.hasError
+              ? Center(
+                  child: Text('Error: ${snapshot.error}'),
+                )
+              : !snapshot.hasData || snapshot.data!.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.notifications_off_outlined,
+                            size: 70,
+                            color: Colors.green.shade300,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'No reminders set.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.green.shade800,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Tap the + button to add a reminder',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        final reminders = snapshot.data!;
+                        return NotificationList(notification: reminders[index]);
+                      },
+                    ),
+    );
+  },
+),
     );
   }
 }
+  

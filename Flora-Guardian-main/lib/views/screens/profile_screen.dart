@@ -1,11 +1,9 @@
-import 'package:flora_guardian/views/custom_widgets/custom_button.dart';
-import 'package:flora_guardian/views/custom_widgets/profile_info.dart';
-import 'package:flora_guardian/views/custom_widgets/profile_text_field.dart';
-import 'package:flora_guardian/views/screens/edit_profile_screen.dart'; // Add this import
 import 'package:flutter/material.dart';
+import 'package:flora_guardian/views/custom_widgets/custom_button.dart';
 import 'package:flora_guardian/controllers/user_controller.dart';
 import 'package:flora_guardian/models/user_model.dart';
 import 'package:flora_guardian/services/profile_cache_service.dart';
+import 'package:flora_guardian/views/screens/edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,20 +21,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize the future immediately
     _userDataFuture = _loadInitialData();
   }
 
   Future<UserModel?> _loadInitialData() async {
     try {
-      if (_userController.getCurrentUser().isEmpty) {
-        return null;
-      }
+      if (_userController.getCurrentUser().isEmpty) return null;
 
       // Try to get cached data first
       final cachedUser = _profileCache.getCachedUser();
       if (cachedUser != null) {
-        // Refresh data in background
         _refreshUserDataInBackground();
         return cachedUser;
       }
@@ -90,40 +84,122 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ProfileInfo(user: userData),
+            // Profile Header (Centralized)
             Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              color: Colors.green.shade50,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ProfileTextField(
-                    text: userData?.userName ?? "Not available",
-                    enabled: false,
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Decorative Circle Background
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green.shade100,
+                        ),
+                      ),
+                      // Avatar
+                      CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
                   ),
-                  ProfileTextField(
-                    text: userData?.email ?? "Not available",
-                    enabled: false,
+                  const SizedBox(height: 10),
+                  Text(
+                    userData?.userName ?? "Not available",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade900,
+                    ),
                   ),
-                  const ProfileTextField(text: "********", enabled: false),
+                  const SizedBox(height: 8),
+                  Text(
+                    userData?.email ?? "Not available",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Profile Details
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: CustomButton(
-                backgroundColor: Colors.black,
-                onPressed: () => _navigateToEditProfile(userData),
-                text: "Edit Profile",
-                textColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Profile Information",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _buildProfileItem(Icons.person, "Username", userData?.userName),
+                          const Divider(height: 20),
+                          _buildProfileItem(Icons.email, "Email", userData?.email),
+                          const Divider(height: 20),
+                          _buildProfileItem(Icons.lock, "Password", "********"),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    backgroundColor: Colors.green.shade700,
+                    onPressed: () => _navigateToEditProfile(userData),
+                    text: "Edit Profile",
+                    textColor: Colors.white,
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileItem(IconData icon, String title, String? value) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.green.shade700, size: 24),
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+      ),
+      subtitle: Text(
+        value ?? "Not available",
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -145,10 +221,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text(
-          "Flora Guardian",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: false,
+        title: Row(
+          children: [
+            Icon(
+              Icons.local_florist,
+              color: Colors.green.shade800,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              "Flora Guardian",
+              style: TextStyle(
+                color: Colors.green.shade800,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
+            ),
+          ],
         ),
         actions: [
           if (_isLoading)
@@ -156,24 +251,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
               ),
             )
           else
             IconButton(
               onPressed: _refreshProfile,
-              icon: const Icon(Icons.refresh),
+              icon: Icon(Icons.refresh, color: Colors.green.shade800),
             ),
-          const Icon(Icons.face, color: Colors.black, size: 40),
+          const SizedBox(width: 16),
         ],
       ),
       body: SafeArea(
         child: FutureBuilder<UserModel?>(
           future: _userDataFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !_isLoading) {
-              return const Center(child: CircularProgressIndicator());
+            if (snapshot.connectionState == ConnectionState.waiting && !_isLoading) {
+              return Center(
+                child: CircularProgressIndicator(color: Colors.green.shade700),
+              );
             }
 
             if (snapshot.hasError) {
@@ -182,8 +278,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('Error: ${snapshot.error}'),
+                    const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: _refreshProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                      ),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -192,7 +292,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             if (snapshot.data == null) {
-              return const Center(child: Text('Please login to view profile'));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person_off_outlined,
+                      size: 70,
+                      color: Colors.green.shade300,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Please login to view profile',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             }
 
             return _buildProfileContent(snapshot.data);

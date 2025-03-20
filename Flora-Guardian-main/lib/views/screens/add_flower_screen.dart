@@ -1,14 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flora_guardian/controllers/flower_controller.dart';
 import 'package:flora_guardian/models/flower_model.dart';
 import 'package:flora_guardian/views/custom_widgets/online_flowers_list.dart';
 import 'package:flora_guardian/views/custom_widgets/search_bar_field.dart';
 import 'package:flora_guardian/views/screens/flower_info_screen.dart';
-import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:random_string/random_string.dart';
 import 'package:flora_guardian/services/cache_service.dart';
-// import 'package:logger/logger.dart';
+
 class AddFlowerScreen extends StatefulWidget {
   const AddFlowerScreen({super.key});
 
@@ -22,7 +23,6 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
   final FlowerController _flowerController = FlowerController();
   final CacheService _cacheService = CacheService();
   List<FlowerModel> flowers = [];
-  final uid = FirebaseAuth.instance.currentUser!.uid.toString();
   static const int _pageSize = 20;
   bool _hasReachedMax = false;
 
@@ -148,9 +148,7 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
       flowerImage: imageUrl,
       commonName: flower.commonName.isNotEmpty ? flower.commonName : 'Unknown',
       scientificName:
-          flower.scientificName.isNotEmpty
-              ? flower.scientificName[0]
-              : 'Unknown',
+          flower.scientificName.isNotEmpty ? flower.scientificName[0] : 'Unknown',
       onListTap: () => _navigateToFlowerInfo(flower),
       onAddTap: () => _addFlowerToProfile(flower),
     );
@@ -160,150 +158,207 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => FlowerInfoScreen(
-              image:
-                  flower.defaultImage?.mediumUrl ??
-                  flower.defaultImage?.regularUrl ??
-                  flower.defaultImage?.smallUrl ??
-                  'https://via.placeholder.com/150?text=No+Image',
-              flowerName: flower.commonName,
-              sunlight:
-                  flower.sunlight.isNotEmpty ? flower.sunlight[0] : 'Unknown',
-              wateringCycle: flower.watering,
-              scientifcName:
-                  flower.scientificName.isNotEmpty
-                      ? flower.scientificName[0]
-                      : 'Unknown',
-              cycle: flower.cycle,
-            ),
+        builder: (_) => FlowerInfoScreen(
+          image: flower.defaultImage?.mediumUrl ??
+              flower.defaultImage?.regularUrl ??
+              flower.defaultImage?.smallUrl ??
+              'https://via.placeholder.com/150?text=No+Image',
+          flowerName: flower.commonName,
+          sunlight: flower.sunlight.isNotEmpty ? flower.sunlight[0] : 'Unknown',
+          wateringCycle: flower.watering,
+          scientifcName:
+              flower.scientificName.isNotEmpty ? flower.scientificName[0] : 'Unknown',
+          cycle: flower.cycle,
+        ),
       ),
     );
   }
-Future<void> _addFlowerToProfile(FlowerModel flower) async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) {
-    _showSnackBar('You must be logged in to add a flower');
-    return;
-  }
 
-  // Show a loading dialog
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Adding flower..."),
-            ],
+  Future<void> _addFlowerToProfile(FlowerModel flower) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      _showSnackBar('You must be logged in to add a flower');
+      return;
+    }
+
+    // Show a loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.green.shade700),
+                const SizedBox(width: 20),
+                Text("Adding flower...", style: TextStyle(fontSize: 16)),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  try {
-    String id = randomAlphaNumeric(6);
-    bool success = await _flowerController.saveFlowerToDb(id, flower, uid);
+    try {
+      String id = randomAlphaNumeric(6);
+      bool success = await _flowerController.saveFlowerToDb(id, flower, uid);
 
-    // Close the loading dialog
-    if (mounted && Navigator.canPop(context)) {
-      Navigator.pop(context);
-    }
+      // Close the loading dialog
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
 
-    if (success) {
-      _showSnackBar('Flower added to profile');
-      // Refresh the list of flowers
-      setState(() {
-        // Optionally, you can refresh the list or update the state as needed
-      });
-    } else {
-      _showSnackBar('This flower is already in your profile');
+      if (success) {
+        _showSnackBar('Flower added to profile');
+      } else {
+        _showSnackBar('This flower is already in your profile');
+      }
+    } catch (e) {
+      // Close the loading dialog if there's an error
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      _showSnackBar('Error adding flower: ${e.toString()}');
     }
-  } catch (e) {
-    // Close the loading dialog if there's an error
-    if (mounted && Navigator.canPop(context)) {
-      Navigator.pop(context);
-    }
-    _showSnackBar('Error adding flower: ${e.toString()}');
   }
-}
 
   void _showSnackBar(String message) {
-  if (!mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(
-        bottom: MediaQuery.of(context).size.height - 200, // Adjusted margin
-        left: 20,
-        right: 20,
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.green.shade700,
+        margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height - 200),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    extendBodyBehindAppBar: true,
+    body: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.green.shade100,
+            Colors.white,
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          // App Bar
+          AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            centerTitle: false,
+            toolbarHeight: 80,
+            title: Row(
+              children: [
+                Icon(Icons.local_florist, color: Colors.green.shade800, size: 32),
+                const SizedBox(width: 12),
+                Text(
+                  "Flora Guardian",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.face, color: Colors.green.shade800, size: 32),
+                onPressed: () {},
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
+
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10), // Reduced vertical padding
+            child: SearchBarField(
+              prefixIcon: Icon(Icons.search, color: Colors.green.shade700),
+              hintText: "Search 'Rose'",
+              controller: searchController,
+              onChanged: _onSearchChanged,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade300),
+                color: Colors.white,
+              ),
+            ),
+          ),
+
+          // Flower List
+          Expanded(
+            child: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(color: Colors.green.shade700),
+                  )
+                : flowers.isEmpty
+                    ? _emptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8), // Reduced vertical padding
+                        itemCount: flowers.length + (_hasReachedMax ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (index == flowers.length) {
+                            return Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Center(
+                                child: isLoadingMore
+                                    ? CircularProgressIndicator(color: Colors.green.shade700)
+                                    : const SizedBox.shrink(),
+                              ),
+                            );
+                          }
+                          return _buildFlowerItem(flowers[index]);
+                        },
+                      ),
+          ),
+        ],
       ),
     ),
   );
 }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Add new flowers 🌻",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.face, color: Colors.black, size: 40),
-          ),
-        ],
-      ),
-      body: Column(
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-            child: SearchBarField(
-              prefixIcon: const Icon(Icons.search),
-              hintText: "Search 'Rose'",
-              controller: searchController,
-              onChanged: _onSearchChanged,
-              decoration: BoxDecoration(),
+          Image.asset(
+            'assets/images/no_flowers.png', // Replace with your own illustration
+            width: 150,
+            height: 150,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No flowers found',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade800,
             ),
           ),
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: flowers.length + (_hasReachedMax ? 0 : 1),
-                    itemBuilder: (context, index) {
-                      if (index == flowers.length) {
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Center(
-                            child:
-                                isLoadingMore
-                                    ? CircularProgressIndicator()
-                                    : SizedBox.shrink(),
-                          ),
-                        );
-                      }
-                      return _buildFlowerItem(flowers[index]);
-                    },
-                    addAutomaticKeepAlives: true,
-                    cacheExtent: 100,
-                  ),
-                ),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            'Try searching for a different flower',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade700,
+            ),
+          ),
         ],
       ),
     );

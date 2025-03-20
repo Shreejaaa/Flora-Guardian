@@ -74,6 +74,29 @@ class FlowerController {
   }
 }
 
+Future<bool> deleteFlower(String userId, int flowerId) async {
+  try {
+    // Query to find the document with matching userId and flowerId
+    final querySnapshot = await _db
+        .collection("flowers")
+        .where("userId", isEqualTo: userId)
+        .where("id", isEqualTo: flowerId)
+        .get();
+    
+    // Delete each matching document
+    if (querySnapshot.docs.isNotEmpty) {
+      for (var doc in querySnapshot.docs) {
+        await _db.collection("flowers").doc(doc.id).delete();
+      }
+      return true;
+    }
+    return false;  // No matching flower found
+  } catch (e) {
+    debugPrint("Failed to delete flower: ${e.toString()}");
+    throw Exception('Failed to delete flower: $e');
+  }
+}
+
 Future<bool> saveFlowerToDb(
   String docId,
   FlowerModel flower,
