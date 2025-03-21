@@ -1,0 +1,273 @@
+[
+    {
+      "id": "1",
+      "common_name": "Rose",
+      "scientific_name": ["Rosa spp."],
+      "picture": "https://drive.google.com/uc?export=view&id=1qUX1wS2pKk8N5jVy0IDoycXc5m0VKKCF",
+      "Humidity": "Moderate",
+      "Lighting": "Full sun",
+      "Watering Cycle": "Every 2–3 days"
+    },
+    {
+      "id": "2",
+      "common_name": "Tulip",
+      "scientific_name": ["Tulipa gesneriana"],
+      "picture": "https://drive.google.com/uc?export=view&id=182jCslMm1lth1vwcObxnTeV5taUBMKyC",
+      "Humidity": "Low",
+      "Lighting": "Partial sun",
+      "Watering Cycle": "Every 4–5 days"
+    },
+    {
+      "id": "3",
+      "common_name": "Sunflower",
+      "scientific_name": ["Helianthus annuus"],
+      "picture": "https://drive.google.com/uc?export=view&id=13NfPNFyScLtAxRgeuR9Tu4Hch9jguPnm",
+      "Humidity": "Low",
+      "Lighting": "Full sun",
+      "Watering Cycle": "Every 3–4 days"
+    },
+    {
+      "id": "4",
+      "common_name": "Lily",
+      "scientific_name": ["Lilium spp."],
+      "picture": "https://drive.google.com/uc?export=view&id=1rKsLu2-idFHwiltK23XiSGpbpbX-4lDl",
+      "Humidity": "Moderate",
+      "Lighting": "Full sun to partial shade",
+      "Watering Cycle": "Once a week"
+    },
+    {
+      "id": "5",
+      "common_name": "Daisy",
+      "scientific_name": ["Bellis perennis"],
+      "picture": "https://drive.google.com/uc?export=view&id=13uJrgOnX_YA6AWgKH46E_Mi8af4I-RUJ",
+      "Humidity": "Low to moderate",
+      "Lighting": "Full sun",
+      "Watering Cycle": "Twice a week"
+    },
+    {
+      "id": "6",
+      "common_name": "Orchid",
+      "scientific_name": ["Orchidaceae spp."],
+      "picture": "https://drive.google.com/uc?export=view&id=1oSCyF_ly-fxIBiKpG-LtPF5EOEuKuTWS",
+      "Humidity": "High",
+      "Lighting": "Indirect bright light",
+      "Watering Cycle": "Every 5–7 days"
+    },
+    {
+      "id": "7",
+      "common_name": "Daffodil",
+      "scientific_name": ["Narcissus pseudonarcissus"],
+      "picture": "https://drive.google.com/uc?export=view&id=1om-eKfHroD-Vd33oWrOjHWjkXNUgt5mH",
+      "Humidity": "Moderate",
+      "Lighting": "Full sun to partial shade",
+      "Watering Cycle": "Once a week"
+    },
+    {
+      "id": "8",
+      "common_name": "Marigold",
+      "scientific_name": ["Tagetes erecta"],
+      "picture": "https://drive.google.com/uc?export=view&id=1RrAof4b25WqMDlv_mRIFdFdvOWFmws_w",
+      "Humidity": "Low to moderate",
+      "Lighting": "Full sun",
+      "Watering Cycle": "Every 1–2 days"
+    },
+    {
+      "id": "9",
+      "common_name": "Peony",
+      "scientific_name": ["Paeonia lactiflora"],
+      "picture": "https://drive.google.com/uc?export=view&id=1KKZ5DMWoMQUPk6zu-OPocVmNvw99OFeg",
+      "Humidity": "Moderate",
+      "Lighting": "Full sun to partial shade",
+      "Watering Cycle": "Twice a week"
+    },
+    {
+      "id": "10",
+      "common_name": "Lavender",
+      "scientific_name": ["Lavandula angustifolia"],
+      "picture": "https://drive.google.com/uc?export=view&id=1pJ61DQXAEw3OcLmxjgpZfQ9jJgcg3Xn6",
+      "Humidity": "Low",
+      "Lighting": "Full sun",
+      "Watering Cycle": "Once every 1–2 weeks"
+    },
+
+    {
+        "id": "11",
+        "common_name": "Chrysanthemum",
+        "scientific_name": ["Chrysanthemum morifolium"],
+        "picture": "https://drive.google.com/uc?export=view&id=11TwuwKzakiS_1p3VwCKnzuuPsei9200f",
+        "Humidity": "Moderate",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "12",
+        "common_name": "Hydrangea",
+        "scientific_name": ["Hydrangea macrophylla"],
+        "picture": "https://drive.google.com/uc?export=view&id=1nuSQBSCbqWCy6vv41N8p2fF2sYPL-mdJ",
+        "Humidity": "High",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Every 2–3 days"
+      },
+      {
+        "id": "13",
+        "common_name": "Carnation",
+        "scientific_name": ["Dianthus caryophyllus"],
+        "picture": "https://drive.google.com/uc?export=view&id=1_rPU-NgRk_XjC97fUH6fzHukLYi-dJZ6",
+        "Humidity": "Low to moderate",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Once a week"
+      },
+      {
+        "id": "14",
+        "common_name": "Iris",
+        "scientific_name": ["Iris spp."],
+        "picture": "https://drive.google.com/uc?export=view&id=1NYMq8R6r7cCc5pvjTfSWpnMbow6k1Eeo",
+        "Humidity": "Moderate",
+        "Lighting": "Full sun to partial shade",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "15",
+        "common_name": "Poppy",
+        "scientific_name": ["Papaver rhoeas"],
+        "picture": "https://drive.google.com/uc?export=view&id=1hFmnjMXCZP4QMJzDyDW0I4jjv9ffg27l",
+        "Humidity": "Low",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Every 4–5 days"
+      },
+      {
+        "id": "16",
+        "common_name": "Zinnia",
+        "scientific_name": ["Zinnia elegans"],
+        "picture": "https://drive.google.com/uc?export=view&id=1tvLQN4Y0il8W3StDxsgMRKHYsXab7wwM",
+        "Humidity": "Low",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Every 2–3 days"
+      },
+      {
+        "id": "17",
+        "common_name": "Snapdragon",
+        "scientific_name": ["Antirrhinum majus"],
+        "picture": "https://drive.google.com/uc?export=view&id=1P0tSB5zczQ-deCY6Vd8QKUr4RzRaMocT",
+        "Humidity": "Low to moderate",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "18",
+        "common_name": "Gerbera Daisy",
+        "scientific_name": ["Gerbera jamesonii"],
+        "picture": "https://drive.google.com/uc?export=view&id=1EvRnA9P8otVwCDmqQBqMhIzF371L4ovB",
+        "Humidity": "Moderate",
+        "Lighting": "Bright indirect light",
+        "Watering Cycle": "Every 3–4 days"
+      },
+      {
+        "id": "19",
+        "common_name": "Petunia",
+        "scientific_name": ["Petunia hybrida"],
+        "picture": "https://drive.google.com/uc?export=view&id=1AYmQI_NbDL5bYvtbPkSFIdKxDa-11LdM",
+        "Humidity": "Low",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Every 2–3 days"
+      },
+      {
+        "id": "20",
+        "common_name": "Begonia",
+        "scientific_name": ["Begonia spp."],
+        "picture": "https://drive.google.com/uc?export=view&id=1BpTcbGGhl3egKOOuxmLi07L2zp-x5Oyi",
+        "Humidity": "High",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Every 3–4 days"
+      },
+      {
+        "id": "21",
+        "common_name": "Amaryllis",
+        "scientific_name": ["Hippeastrum spp."],
+        "picture": "https://drive.google.com/uc?export=view&id=1QXNWDWLjSBiq1eJKgrD-wBon3UIstrYq",
+        "Humidity": "Moderate",
+        "Lighting": "Bright indirect light",
+        "Watering Cycle": "Once a week"
+      },
+      {
+        "id": "22",
+        "common_name": "Camellia",
+        "scientific_name": ["Camellia japonica"],
+        "picture": "https://drive.google.com/uc?export=view&id=1IWu1cZp9wiGwCq-LCwokiAmJ4jGFh8vl",
+        "Humidity": "High",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "23",
+        "common_name": "Hibiscus",
+        "scientific_name": ["Hibiscus rosa-sinensis"],
+        "picture": "https://drive.google.com/uc?export=view&id=1M6ja_8jAbLITPmE6QDHE1E7EuIWngznM",
+        "Humidity": "High",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Every 2–3 days"
+      },
+      {
+        "id": "24",
+        "common_name": "Anemone",
+        "scientific_name": ["Anemone coronaria"],
+        "picture": "https://drive.google.com/uc?export=view&id=1M4WkVCyqkntXwHyLjeGmv5Y1NzE4sCMH",
+        "Humidity": "Moderate",
+        "Lighting": "Full sun to partial shade",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "25",
+        "common_name": "Cosmos",
+        "scientific_name": ["Cosmos bipinnatus"],
+        "picture": "https://drive.google.com/uc?export=view&id=1XzpTKrJU49if0AUJ6AsgwNsFJMAGBYZ8",
+        "Humidity": "Low",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Every 3–4 days"
+      },
+      {
+        "id": "26",
+        "common_name": "Gardenia",
+        "scientific_name": ["Gardenia jasminoides"],
+        "picture": "https://drive.google.com/uc?export=view&id=1ZqfHCdUCwO-9EZvLi4gTZ2x6YUCASzqt",
+        "Humidity": "High",
+        "Lighting": "Bright indirect light",
+        "Watering Cycle": "Every 2–3 days"
+      },
+      {
+        "id": "27",
+        "common_name": "Gladiolus",
+        "scientific_name": ["Gladiolus spp."],
+        "picture": "https://drive.google.com/uc?export=view&id=1YqaaxgC7zkjq0BjKXA8UlCazeDwqpnNB",
+        "Humidity": "Moderate",
+        "Lighting": "Full sun",
+        "Watering Cycle": "Twice a week"
+      },
+      {
+        "id": "28",
+        "common_name": "Bluebell",
+        "scientific_name": ["Hyacinthoides non-scripta"],
+        "picture": "https://drive.google.com/uc?export=view&id=1ZDgWpaZcW9IaEdXTk54nJLbBBqc9ff2f",
+        "Humidity": "Moderate",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Once a week"
+      },
+      {
+        "id": "29",
+        "common_name": "Primrose",
+        "scientific_name": ["Primula vulgaris"],
+        "picture": "https://drive.google.com/uc?export=view&id=1VGcihZGgn2zcmFdn1elAcgCwO4yYi7qr",
+        "Humidity": "High",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Every 3–4 days"
+      },
+      {
+        "id": "30",
+        "common_name": "Foxglove",
+        "scientific_name": ["Digitalis purpurea"],
+        "picture": "https://drive.google.com/uc?export=view&id=1PFm04CzdekdcPQbiskB4sqtvr1wxn34t",
+        "Humidity": "Moderate",
+        "Lighting": "Partial shade",
+        "Watering Cycle": "Twice a week"
+      }
+  ]

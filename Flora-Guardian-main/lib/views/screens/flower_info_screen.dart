@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 
 class FlowerInfoScreen extends StatelessWidget {
@@ -7,7 +5,7 @@ class FlowerInfoScreen extends StatelessWidget {
   final String flowerName;
   final String sunlight;
   final String wateringCycle;
-  final String cycle;
+  final String humidity;
   final String scientifcName;
 
   const FlowerInfoScreen({
@@ -16,7 +14,7 @@ class FlowerInfoScreen extends StatelessWidget {
     required this.flowerName,
     required this.sunlight,
     required this.wateringCycle,
-    required this.cycle,
+    required this.humidity,
     required this.scientifcName,
   });
 
@@ -30,17 +28,9 @@ class FlowerInfoScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: Colors.white),
-        // title: Text("Flower Details", 
-        //   style: TextStyle(
-        //     color: Colors.white, 
-        //     fontWeight: FontWeight.bold,
-        //     shadows: [Shadow(color: Colors.black54, blurRadius: 2, offset: Offset(1, 1))]
-        //   )
-        // ),
       ),
       body: Stack(
         children: [
-          // Hero image with gradient overlay
           Container(
             height: mq.height * 0.45,
             width: mq.width,
@@ -64,14 +54,12 @@ class FlowerInfoScreen extends StatelessWidget {
             ),
           ),
           
-          // Content area
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: mq.height * 0.35),
                 
-                // Info container
                 Container(
                   width: mq.width,
                   decoration: BoxDecoration(
@@ -83,14 +71,12 @@ class FlowerInfoScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Flower name with decorative line
                         Row(
                           children: [
                             Container(
                               height: 30,
                               width: 5,
                               decoration: BoxDecoration(
-                                // color: Colors.green.shade700,
                                 borderRadius: BorderRadius.circular(5),
                               ),
                             ),
@@ -109,7 +95,6 @@ class FlowerInfoScreen extends StatelessWidget {
                         ),
                         
                         SizedBox(height: 6),
-                        // Scientific name in italics
                         Padding(
                           padding: EdgeInsets.only(left: 15),
                           child: Text(
@@ -124,7 +109,6 @@ class FlowerInfoScreen extends StatelessWidget {
                         
                         SizedBox(height: 30),
                         
-                        // Info cards
                         _buildInfoCard(
                           context: context,
                           title: "Watering Cycle",
@@ -149,8 +133,8 @@ class FlowerInfoScreen extends StatelessWidget {
                         
                         _buildInfoCard(
                           context: context,
-                          title: "Cycle",
-                          content: cycle,
+                          title: "Humidity",
+                          content: humidity,
                           icon: Icons.repeat,
                           color: Colors.green.shade100,
                           iconColor: Colors.green.shade700,
@@ -158,7 +142,6 @@ class FlowerInfoScreen extends StatelessWidget {
                         
                         SizedBox(height: 30),
                         
-                        // Care tips section
                         Text(
                           "Care Tips",
                           style: TextStyle(
@@ -181,7 +164,7 @@ class FlowerInfoScreen extends StatelessWidget {
                         ),
                         
                         _buildCareTip(
-                          tip: "This plant follows a ${cycle.toLowerCase()} growing pattern.",
+                          tip: "This plant follows a ${humidity.toLowerCase()}.",
                           icon: Icons.eco_outlined,
                         ),
                         

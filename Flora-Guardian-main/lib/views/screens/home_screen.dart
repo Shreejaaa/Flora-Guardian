@@ -1,12 +1,10 @@
-import 'package:flora_guardian/controllers/user_controller.dart';
-import 'package:flora_guardian/views/custom_widgets/search_bar_field.dart';
-import 'package:flora_guardian/views/screens/add_flower_screen.dart';
-import 'package:flora_guardian/views/screens/flower_info_screen.dart';
 import 'package:flora_guardian/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flora_guardian/controllers/flower_controller.dart';
 import 'package:flora_guardian/models/flower_model.dart';
+import 'package:flora_guardian/views/screens/add_flower_screen.dart';
+import 'package:flora_guardian/views/screens/flower_info_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
@@ -17,9 +15,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController searchController = TextEditingController();
   final FlowerController _flowerController = FlowerController();
   final String userUid = FirebaseAuth.instance.currentUser!.uid;
+
+  // Search functionality
+  final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
   Timer? _debounce;
 
@@ -93,16 +93,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(color: Colors.grey.shade700),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteFlower(flower.id);
-              },
-              child: Text(
-                "Delete",
-                style: TextStyle(color: Colors.red.shade400),
-              ),
-            ),
+           TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _deleteFlower(int.parse(flower.id)); // Convert String to int
+                    },
+                    child: Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.red.shade400),
+                    ),
+                  ),
           ],
         );
       },
@@ -179,7 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
             onSelected: (value) async {
               if (value == 0) {
-                await UserController().logOut();
+                // Handle logout logic here
+                await FirebaseAuth.instance.signOut();
                 if (mounted) {
                   Navigator.pushReplacement(
                     context,
@@ -203,15 +204,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search field at the very beginning of the body
-              const SizedBox(height: 20), 
+              // Search field
+              const SizedBox(height: 20),
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16), // Reduced top padding
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -224,20 +224,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  child: SearchBarField(
-                    prefixIcon: Icon(Icons.search, color: Colors.green.shade700),
-                    hintText: "Search 'Rose'",
+                  child: TextField(
                     controller: searchController,
                     onChanged: _onSearchChanged,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: Colors.green.shade700),
+                      hintText: "Search 'Rose'",
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
                 ),
               ),
 
               // Subtitle
-              const SizedBox(height: 20), 
+              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
@@ -266,181 +267,139 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Flowers grid
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: FutureBuilder<Stream<List<FlowerModel>>>(
-                    future: _flowerController.loadFlowersFromFirebase(userUid),
-                    builder: (context, asyncSnapshot) {
-                      if (asyncSnapshot.hasError) {
-                        return Center(
-                          child: Text('Error: ${asyncSnapshot.error}'),
-                        );
-                      }
-                      if (!asyncSnapshot.hasData) {
-                        return Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.green.shade700,
-                          ),
-                        );
-                      }
-                      return StreamBuilder<List<FlowerModel>>(
-                        stream: asyncSnapshot.data,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasError) {
-                            return Center(
-                              child: Text('Error: ${snapshot.error}'),
-                            );
-                          }
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.green.shade700,
-                              ),
-                            );
-                          }
-                          final flowers = snapshot.data ?? [];
-                          if (flowers.isEmpty) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.eco_outlined,
-                                    size: 70,
-                                    color: Colors.green.shade300,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Your garden is empty',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.green.shade800,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    'Add your first plant by tapping the + button',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return GridView.builder(
-                            padding: const EdgeInsets.only(bottom: 24, top: 8),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 1, // Adjusted for circular design
-                            ),
-                            itemCount: flowers.length,
-                            itemBuilder: (context, index) {
-                              final flower = flowers[index];
-                              // Filter flowers based on search query
-                              if (searchQuery.isNotEmpty &&
-                                  !flower.commonName.toLowerCase().contains(searchQuery)) {
-                                return const SizedBox.shrink();
-                              }
-                              // Circular plant card
-                              return Stack(
-                                children: [
-                                  // Main card
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => FlowerInfoScreen(
-                                            image: flower.defaultImage?.mediumUrl ??
-                                                flower.defaultImage?.regularUrl ??
-                                                flower.defaultImage?.smallUrl ??
-                                                'https://via.placeholder.com/150?text=No+Image',
-                                            flowerName: flower.commonName,
-                                            sunlight: flower.sunlight.isNotEmpty
-                                                ? flower.sunlight[0]
-                                                : 'Unknown',
-                                            wateringCycle: flower.watering,
-                                            scientifcName: flower.scientificName.isNotEmpty
-                                                ? flower.scientificName[0]
-                                                : 'Unknown',
-                                            cycle: flower.cycle,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      child: Center(
-                                        child: Container(
-                                          height: 160,
-                                          width: 160,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Colors.grey.shade100,
-                                            image: flower.defaultImage?.mediumUrl != null &&
-                                                    flower.defaultImage!.mediumUrl.isNotEmpty
-                                                ? DecorationImage(
-                                                    image: NetworkImage(flower.defaultImage!.mediumUrl),
-                                                    fit: BoxFit.cover,
-                                                    onError: (exception, stackTrace) {
-                                                      return;
-                                                    },
-                                                  )
-                                                : null,
-                                          ),
-                                          child: flower.defaultImage?.mediumUrl == null ||
-                                                  flower.defaultImage!.mediumUrl.isEmpty
-                                              ? Center(
-                                                  child: Icon(
-                                                    Icons.local_florist_outlined,
-                                                    size: 40,
-                                                    color: Colors.green.shade300,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Delete button
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: GestureDetector(
-                                      onTap: () => _confirmDelete(flower),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.9),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.1),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Icon(
-                                          Icons.delete_outline,
-                                          size: 18,
-                                          color: Colors.red.shade400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
+                child: StreamBuilder<List<FlowerModel>>(
+                  stream: _flowerController.loadFlowersFromFirebase(userUid),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(color: Colors.green.shade700),
                       );
-                    },
-                  ),
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.eco_outlined,
+                              size: 70,
+                              color: Colors.green.shade300,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Your garden is empty',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.green.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              'Add your first plant by tapping the + button',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final flowers = snapshot.data!;
+                    return GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: flowers.length,
+                      itemBuilder: (context, index) {
+                        final flower = flowers[index];
+                        if (searchQuery.isNotEmpty &&
+                            !flower.commonName.toLowerCase().contains(searchQuery)) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Stack(
+                          children: [
+                            // Main card
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FlowerInfoScreen(
+                                      image: flower.picture,
+                                      flowerName: flower.commonName,
+                                      sunlight: flower.lighting,
+                                      wateringCycle: flower.wateringCycle,
+                                      scientifcName: flower.scientificName.join(', '),
+                                      humidity: flower.humidity,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                height: 160,
+                                width: 160,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey.shade100,
+                                  image: DecorationImage(
+                                    image: NetworkImage(flower.picture),
+                                    fit: BoxFit.cover,
+                                    onError: (exception, stackTrace) {},
+                                  ),
+                                ),
+                                child: flower.picture.isEmpty
+                                    ? Center(
+                                        child: Icon(
+                                          Icons.local_florist_outlined,
+                                          size: 40,
+                                          color: Colors.green.shade300,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
+
+                            // Delete button
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () => _confirmDelete(flower),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.9),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: Colors.red.shade400,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
