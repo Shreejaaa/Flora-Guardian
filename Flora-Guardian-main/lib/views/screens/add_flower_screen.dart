@@ -147,153 +147,266 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: Colors.green.shade50,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
+              Colors.green.shade50,
               Colors.green.shade100,
-              Colors.white,
             ],
           ),
         ),
-        child: Column(
-          children: [
-            // App Bar
-            AppBar(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              centerTitle: false,
-              toolbarHeight: 80,
-              title: Row(
-                children: [
-                  Icon(Icons.local_florist, color: Colors.green.shade800, size: 32),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Flora Guardian",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // App Bar matching HomeScreen style with just a back arrow
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    // Back Button (just arrow, no box)
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios, color: Colors.green.shade800, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // Logo and Title
+                    Icon(
+                      Icons.local_florist,
                       color: Colors.green.shade800,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Flora Guardian",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                    const Spacer(),
+                    
+                    // User Icon (using CircleAvatar as in HomeScreen)
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 18,
+                      child: Icon(Icons.person_outline, color: Colors.green.shade700, size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                ),
+              ),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: Colors.green.shade700),
+                      hintText: "Search for flowers...",
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.face, color: Colors.green.shade800, size: 32),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 16),
-              ],
-            ),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search, color: Colors.green.shade700),
-                  hintText: "Search 'Rose'",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
-            ),
+              
+              // Title
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Discover Plants",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      "${filteredFlowers.length} plants",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
-            // Flower List
-            Expanded(
-              child: isLoading
-                  ? Center(child: CircularProgressIndicator(color: Colors.green.shade700))
-                  : filteredFlowers.isEmpty
-                      ? _emptyState()
-                      : GridView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 1,
+              // Flower List
+              Expanded(
+                child: isLoading
+                    ? Center(child: CircularProgressIndicator(color: Colors.green.shade700))
+                    : filteredFlowers.isEmpty
+                        ? _emptyState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            itemCount: filteredFlowers.length,
+                            itemBuilder: (context, index) {
+                              final flower = filteredFlowers[index];
+                              return _buildFlowerListItem(flower);
+                            },
                           ),
-                          itemCount: filteredFlowers.length,
-                          itemBuilder: (context, index) {
-                            final flower = filteredFlowers[index];
-                            return _buildFlowerItem(flower);
-                          },
-                        ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFlowerItem(FlowerModel flower) {
-    return Stack(
-      children: [
-        // Main card
-        GestureDetector(
+  Widget _buildFlowerListItem(FlowerModel flower) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _navigateToFlowerInfo(flower),
-          child: Container(
-            height: 160,
-            width: 160,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10), // Rounded corners for square shape
-              image: DecorationImage(
-                image: NetworkImage(flower.picture),
-                fit: BoxFit.cover,
-                onError: (exception, stackTrace) {},
-              ),
-            ),
-            child: flower.picture.isEmpty
-                ? Center(
-                    child: Icon(
-                      Icons.local_florist_outlined,
-                      size: 40,
-                      color: Colors.green.shade300,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Flower Image
+                Hero(
+                  tag: 'flower_${flower.commonName}',
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: flower.picture.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(flower.picture),
+                              fit: BoxFit.cover,
+                              onError: (exception, stackTrace) {},
+                            )
+                          : null,
+                      color: Colors.green.shade50,
                     ),
-                  )
-                : null,
-          ),
-        ),
-
-        // Add button
-        Positioned(
-          bottom: 10,
-          right: 10,
-          child: GestureDetector(
-            onTap: () => _addFlowerToProfile(flower),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    child: flower.picture.isEmpty
+                        ? Center(
+                            child: Icon(
+                              Icons.local_florist_outlined,
+                              size: 30,
+                              color: Colors.green.shade300,
+                            ),
+                          )
+                        : null,
                   ),
-                ],
-              ),
-              child: Icon(
-                Icons.add,
-                size: 24,
-                color: Colors.green.shade700,
-              ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Flower Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        flower.commonName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        flower.scientificName.join(', '),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey.shade600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      // Care indicators - icons only, no text
+                      Row(
+                        children: [
+                          Icon(Icons.water_drop_outlined, size: 16, color: Colors.blue.shade300),
+                          const SizedBox(width: 12),
+                          Icon(Icons.wb_sunny_outlined, size: 16, color: Colors.amber.shade400),
+                          const SizedBox(width: 12),
+                          Icon(Icons.water_outlined, size: 16, color: Colors.teal.shade300),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Add Button
+                GestureDetector(
+                  onTap: () => _addFlowerToProfile(flower),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      size: 24,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -302,26 +415,50 @@ class _AddFlowerScreenState extends State<AddFlowerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/images/no_flowers.png', // Replace with your own illustration
-            width: 150,
-            height: 150,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.search_off_rounded,
+              size: 80,
+              color: Colors.green.shade300,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             'No flowers found',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.green.shade800,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Try searching for a different flower',
+            'Try searching with a different name',
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
+              fontSize: 16,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              _searchController.clear();
+              _onSearchChanged('');
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Show all plants'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade100,
+              foregroundColor: Colors.green.shade800,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],

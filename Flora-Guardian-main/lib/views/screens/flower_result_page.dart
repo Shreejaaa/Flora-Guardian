@@ -15,7 +15,7 @@ class FlowerResultPage extends StatelessWidget {
 
   // Get flower care information based on species
   Map<String, dynamic> getFlowerInfo() {
-    // You would ideally store this in a database or fetch from an API
+  
     final flowerDatabase = {
       'daisy': {
         'water': '2-3 times per week',
@@ -111,26 +111,7 @@ class FlowerResultPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Confidence indicator
-                // Positioned(
-                //   top: 20,
-                //   right: 20,
-                //   child: Container(
-                //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                //     decoration: BoxDecoration(
-                //       color: Colors.black.withOpacity(0.7),
-                //       borderRadius: BorderRadius.circular(20),
-                //     ),
-                //     child: Text(
-                //       'Confidence: ${confidence.toStringAsFixed(1)}%',
-                //       style: const TextStyle(
-                //         color: Colors.white,
-                //         fontWeight: FontWeight.bold,
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                // Gradient overlay at the bottom
+               
                 Container(
                   height: 80,
                   decoration: BoxDecoration(

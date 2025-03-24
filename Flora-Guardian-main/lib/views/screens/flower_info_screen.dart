@@ -164,7 +164,7 @@ class FlowerInfoScreen extends StatelessWidget {
                         ),
                         
                         _buildCareTip(
-                          tip: "This plant follows a ${humidity.toLowerCase()}.",
+                          tip: "This plant thrives in a ${humidity.toLowerCase()} humidity level.",
                           icon: Icons.eco_outlined,
                         ),
                         

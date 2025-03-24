@@ -20,8 +20,9 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AnimationController _animationController;
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
-  final ImagePicker _imagePicker = ImagePicker();
-  Interpreter? _interpreter;
+
+  Interpreter? _flowerInterpreter; // Flower model interpreter
+  Interpreter? _diseaseInterpreter; // Disease model interpreter
   bool _isModelLoaded = false;
   bool _isProcessing = false;
   bool _isFlowerMode = true; // Toggle between flower and disease detection
@@ -39,7 +40,8 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   Future<void> _loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/flower_recognition.tflite');
+      _flowerInterpreter = await Interpreter.fromAsset('assets/flower_recognition.tflite');
+      _diseaseInterpreter = await Interpreter.fromAsset('assets/plant_disease_model.tflite');
       setState(() => _isModelLoaded = true);
     } catch (e) {
       debugPrint('Failed to load model: $e');
@@ -64,7 +66,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Future<Map<String, dynamic>> _classifyImage(String imagePath) async {
-    if (_interpreter == null) return {'error': 'Model not loaded'};
+    if (_flowerInterpreter == null) return {'error': 'Model not loaded'};
     // Load and preprocess the image
     final imageBytes = File(imagePath).readAsBytesSync();
     final image = img.decodeImage(imageBytes);
@@ -82,18 +84,14 @@ class _ScannerScreenState extends State<ScannerScreen>
       }
     }
     // Run inference
-    final output = List.filled(1 * 5, 0.0).reshape([1, 5]);
-    _interpreter!.run(input, output);
+    final output = List.filled(1 * 5, 0.0).reshape([1, 5]); // Adjust based on model output size
+    _flowerInterpreter!.run(input, output);
     // Get the prediction
     return _getPrediction(output.cast<List<double>>(), imagePath);
   }
 
   Map<String, dynamic> _getPrediction(List<List<double>> output, String imagePath) {
     final flowerNames = ['daisy', 'dandelion', 'iris', 'rose', 'sunflower'];
-    // Ensure output[0] is not empty
-    if (output.isEmpty || output[0].isEmpty) {
-      return {'error': 'No prediction available.'};
-    }
     // Find the index of the maximum value in output[0]
     final predictedIndex =
         output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
@@ -107,6 +105,64 @@ class _ScannerScreenState extends State<ScannerScreen>
     };
   }
 
+  Future<Map<String, dynamic>> _classifyDisease(String imagePath) async {
+    if (_diseaseInterpreter == null) return {'error': 'Model not loaded'};
+    // Load and preprocess the image
+    final imageBytes = File(imagePath).readAsBytesSync();
+    final image = img.decodeImage(imageBytes);
+    if (image == null) return {'error': 'Failed to decode image'};
+    // Resize the image to match the model's input size
+    final resizedImage = img.copyResize(image, width: 180, height: 180);
+    // Normalize the image pixels
+    final input = List.filled(180 * 180 * 3, 0.0).reshape([1, 180, 180, 3]);
+    for (int y = 0; y < 180; y++) {
+      for (int x = 0; x < 180; x++) {
+        final pixel = resizedImage.getPixel(x, y);
+        input[0][y][x][0] = pixel.r / 255.0; // Normalize red channel
+        input[0][y][x][1] = pixel.g / 255.0; // Normalize green channel
+        input[0][y][x][2] = pixel.b / 255.0; // Normalize blue channel
+      }
+    }
+    // Run inference
+    final output = List.filled(1 * 19, 0.0).reshape([1, 19]); // Adjust based on model output size
+    _diseaseInterpreter!.run(input, output);
+    // Get the prediction
+    return _getDiseasePrediction(output.cast<List<double>>());
+  }
+
+  Map<String, dynamic> _getDiseasePrediction(List<List<double>> output) {
+    final diseaseNames = [
+      'Apple___Apple_scab',
+      'Apple___Black_rot',
+      'Apple___Cedar_apple_rust',
+      'Apple___healthy',
+      'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot',
+      'Corn_(maize)___Common_rust_',
+      'Corn_(maize)___Northern_Leaf_Blight',
+      'Corn_(maize)___healthy',
+      'Grape___Black_rot',
+      'Grape___Esca_(Black_Measles)',
+      'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)',
+      'Grape___healthy',
+      'Potato___Early_blight',
+      'Potato___Late_blight',
+      'Potato___healthy',
+      'Tomato___Bacterial_spot',
+      'Tomato___Leaf_Mold',
+      'Tomato___Septoria_leaf_spot',
+      'Tomato___healthy'
+    ];
+    // Find the index of the maximum value in output[0]
+    final predictedIndex =
+        output[0].indexOf(output[0].reduce((double a, double b) => a > b ? a : b));
+    // Calculate confidence percentage
+    final confidence = output[0][predictedIndex] * 100;
+    return {
+      'diseaseName': diseaseNames[predictedIndex],
+      'confidence': confidence,
+    };
+  }
+
   Future<void> _takePicture() async {
     if (_cameraController == null ||
         !_cameraController!.value.isInitialized ||
@@ -117,7 +173,7 @@ class _ScannerScreenState extends State<ScannerScreen>
     try {
       final XFile picture = await _cameraController!.takePicture();
       if (_isFlowerMode) {
-        // Original flower recognition logic
+        // Flower recognition mode
         final result = await _classifyImage(picture.path);
         if (result.containsKey('error')) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -127,7 +183,6 @@ class _ScannerScreenState extends State<ScannerScreen>
           return;
         }
         if (!mounted) return;
-        // Navigate to flower result page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -140,13 +195,22 @@ class _ScannerScreenState extends State<ScannerScreen>
         );
       } else {
         // Disease detection mode
+        final diseaseResult = await _classifyDisease(picture.path);
+        if (diseaseResult.containsKey('error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(diseaseResult['error'])),
+          );
+          setState(() => _isProcessing = false);
+          return;
+        }
         if (!mounted) return;
-        // Navigate to disease detection page directly
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DiseaseResultPage(
               imagePath: picture.path,
+              diseaseName: diseaseResult['diseaseName'],
+              confidence: diseaseResult['confidence'],
             ),
           ),
         );
@@ -167,14 +231,13 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
     try {
-      final pickedFile =
-          await _imagePicker.pickImage(source: ImageSource.gallery);
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (pickedFile == null) {
         setState(() => _isProcessing = false);
         return;
       }
       if (_isFlowerMode) {
-        // Original flower recognition logic
+        // Flower recognition mode
         final result = await _classifyImage(pickedFile.path);
         if (result.containsKey('error')) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -184,7 +247,6 @@ class _ScannerScreenState extends State<ScannerScreen>
           return;
         }
         if (!mounted) return;
-        // Navigate to flower result page
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -197,13 +259,22 @@ class _ScannerScreenState extends State<ScannerScreen>
         );
       } else {
         // Disease detection mode
+        final diseaseResult = await _classifyDisease(pickedFile.path);
+        if (diseaseResult.containsKey('error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(diseaseResult['error'])),
+          );
+          setState(() => _isProcessing = false);
+          return;
+        }
         if (!mounted) return;
-        // Navigate to disease detection page directly
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DiseaseResultPage(
               imagePath: pickedFile.path,
+              diseaseName: diseaseResult['diseaseName'],
+              confidence: diseaseResult['confidence'],
             ),
           ),
         );
@@ -224,7 +295,8 @@ class _ScannerScreenState extends State<ScannerScreen>
   void dispose() {
     _animationController.dispose();
     _cameraController?.dispose();
-    _interpreter?.close();
+    _flowerInterpreter?.close();
+    _diseaseInterpreter?.close();
     super.dispose();
   }
 
@@ -233,7 +305,6 @@ class _ScannerScreenState extends State<ScannerScreen>
     final size = MediaQuery.of(context).size;
     final scannerSize = size.width * 0.8;
     final cameraSize = scannerSize * 0.9;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
@@ -283,7 +354,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                   const SizedBox(width: 16),
                 ],
               ),
-
               // Mode toggle switch
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),

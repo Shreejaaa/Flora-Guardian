@@ -57,7 +57,7 @@ class FlowerController {
           .doc(flowerId.toString()) // Assuming `flowerId` is used as the document ID
           .delete();
 
-      print('Flower deleted successfully');
+      ('Flower deleted successfully');
     } catch (e) {
       throw Exception('Failed to delete flower: $e');
     }
