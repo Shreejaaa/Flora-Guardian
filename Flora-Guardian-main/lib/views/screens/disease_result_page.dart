@@ -2,19 +2,90 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 class DiseaseResultPage extends StatelessWidget {
-  final String imagePath;
   final String diseaseName;
+  final String plantType;
+  final String condition;
   final double confidence;
+  final String imagePath;
 
   const DiseaseResultPage({
-    super.key,
-    required this.imagePath,
     required this.diseaseName,
+    required this.plantType,
+    required this.condition,
     required this.confidence,
+    required this.imagePath,
   });
+
+  // Format disease name for user-friendly display
+  String _formatDiseaseNameForDisplay(String name) {
+    if (name.isEmpty) return 'Unknown Disease';
+    
+    // Remove "___" separators and replace with ": "
+    String formatted = name;
+    if (name.contains('___')) {
+      List<String> parts = name.split('___');
+      String plantPart = parts[0].replaceAll('_', ' ');
+      String diseasePart = parts[1].replaceAll('_', ' ');
+      
+      // Capitalize words
+      plantPart = _capitalizeWords(plantPart);
+      diseasePart = _capitalizeWords(diseasePart);
+      
+      formatted = '$plantPart: $diseasePart';
+    } else {
+      // Just replace underscores with spaces and capitalize
+      formatted = _capitalizeWords(name.replaceAll('_', ' '));
+    }
+    
+    return formatted;
+  }
+
+  // Helper to capitalize each word in a string
+  String _capitalizeWords(String text) {
+    if (text.isEmpty) return '';
+    
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1);
+    }).join(' ');
+  }
+
+  // Enhanced normalization function
+  String _normalizeDiseaseName(String name) {
+    if (name.isEmpty) return 'unknown';
+    
+    // First, try to preserve the original format if possible
+    if (name.contains('___')) {
+      return name.trim();
+    }
+    
+    // Otherwise, perform more aggressive normalization
+    String normalized = name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9_ ]'), '') // Remove special chars
+        .replaceAll(' ', '_')  // Spaces to underscores
+        .trim();
+        
+    // Check if it contains plant name and condition separated by some delimiter
+    List<String> parts = normalized.split(RegExp(r'[_\s-]+'));
+    if (parts.length >= 2) {
+      String plantName = parts[0];
+      // Combine the rest as the condition
+      String condition = parts.sublist(1).join('_');
+      return '${plantName}___${condition}';
+    }
+    
+    return normalized;
+  }
 
   // Get disease information based on detected disease
   Map<String, dynamic> getDiseaseInfo() {
+    debugPrint('==== DISEASE DATA DUMP ====');
+    debugPrint('Raw diseaseName: $diseaseName');
+    debugPrint('Plant type: $plantType');
+    debugPrint('Condition: $condition');
+    debugPrint('Confidence: $confidence%');
+    
     final diseaseDatabase = {
       'Apple___Apple_scab': {
         'cause': 'Fungal infection caused by Venturia inaequalis',
@@ -150,12 +221,87 @@ class DiseaseResultPage extends StatelessWidget {
         'icon': Icons.check_circle_outline,
       },
     };
-    return diseaseDatabase[diseaseName] ?? {
-      'cause': 'Unknown cause',
-      'treatment': 'Information not available',
-      'prevention': 'Information not available',
-      'color': Colors.grey.shade100,
-      'icon': Icons.help_outline,
+    
+    // Try multiple approaches to find a match
+    
+    // 0. Try using the plant type and condition directly if available
+    if (plantType.isNotEmpty && condition.isNotEmpty) {
+      String constructedKey = '${plantType}___${condition.replaceAll(' ', '_')}';
+      debugPrint('Trying constructed key: $constructedKey');
+      if (diseaseDatabase.containsKey(constructedKey)) {
+        return diseaseDatabase[constructedKey]!;
+      }
+    }
+    
+    // 1. Normalize the incoming name
+    final normalizedName = _normalizeDiseaseName(diseaseName);
+    debugPrint('Normalized name: $normalizedName');
+    debugPrint('Available keys: ${diseaseDatabase.keys.join(', ')}');
+    
+    // 2. Try exact match
+    if (diseaseDatabase.containsKey(normalizedName)) {
+      return diseaseDatabase[normalizedName]!;
+    }
+    
+    // 3. Try case-insensitive match
+    for (final key in diseaseDatabase.keys) {
+      if (key.toLowerCase() == normalizedName.toLowerCase()) {
+        return diseaseDatabase[key]!;
+      }
+    }
+    
+    // 4. Try to match just based on plant type
+    if (plantType.isNotEmpty) {
+      for (final key in diseaseDatabase.keys) {
+        if (key.toLowerCase().startsWith(plantType.toLowerCase())) {
+          if (condition.toLowerCase().contains('healthy') && 
+              key.toLowerCase().contains('healthy')) {
+            return diseaseDatabase[key]!;
+          }
+          else if (condition.toLowerCase().contains(key.split('___').last.toLowerCase())) {
+            return diseaseDatabase[key]!;
+          }
+        }
+      }
+    }
+    
+    // 5. Try keywords matching
+    final words = normalizedName.toLowerCase().split(RegExp(r'[_\s]+'));
+    for (final key in diseaseDatabase.keys) {
+      final keyWords = key.toLowerCase().split(RegExp(r'[_\s]+'));
+      // Check if at least half of the words match
+      int matches = 0;
+      for (final word in words) {
+        if (keyWords.contains(word)) {
+          matches++;
+        }
+      }
+      if (matches >= words.length / 2) {
+        return diseaseDatabase[key]!;
+      }
+    }
+    
+    // 6. Try the condition part after last ___
+    final conditionPart = normalizedName.split('___').last;
+    for (final key in diseaseDatabase.keys) {
+      if (key.endsWith(conditionPart)) {
+        return diseaseDatabase[key]!;
+      }
+    }
+    
+    // 7. Try partial matching
+    for (final key in diseaseDatabase.keys) {
+      if (normalizedName.contains(key) || key.contains(normalizedName)) {
+        return diseaseDatabase[key]!;
+      }
+    }
+    
+    return {
+      'cause': 'No match found for "$diseaseName" (normalized: "$normalizedName")',
+      'treatment': 'Available keys: ${diseaseDatabase.keys.join(', ')}',
+      'prevention': 'Check backend response format',
+      'color': Colors.orange.shade100,
+      'icon': Icons.search_off,
     };
   }
 
@@ -223,11 +369,11 @@ class DiseaseResultPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Disease name on the image
+                // Disease name on the image - UPDATED to use the formatter
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    diseaseName.toUpperCase(),
+                    _formatDiseaseNameForDisplay(diseaseName),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
