@@ -18,7 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLogin = false;
   String? emailError;
   String? passwordError;
-  String? generalError;
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -31,11 +30,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Future<void> _showErrorDialog(String message) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     setState(() {
       emailError = null;
       passwordError = null;
-      generalError = null;
     });
 
     if (!_formKey.currentState!.validate()) return;
@@ -53,16 +68,26 @@ class _LoginScreenState extends State<LoginScreen> {
       if (error != null) {
         if (!mounted) return;
         setState(() {
-          if (error.toLowerCase().contains("user not found")) {
-            emailError = "User not found. Please check your email.";
-          } else if (error.toLowerCase().contains("incorrect password")) {
-            passwordError = "Incorrect password. Please try again.";
-          } else if (error.toLowerCase().contains("invalid email or password")) {
-            generalError = "Invalid email or password. Please check your credentials.";
-          } else {
-            generalError = error; // Display all other errors
-          }
+          isLogin = false;
         });
+        
+        // Handle specific error cases
+        switch (error) {
+          case 'User not found':
+            setState(() {
+              emailError = 'User not found. Please check your email.';
+            });
+            await _showErrorDialog('User not found. Please check your email.');
+            break;
+          case 'Wrong password':
+            setState(() {
+              passwordError = 'Incorrect password. Please try again.';
+            });
+            await _showErrorDialog('Incorrect password. Please try again.');
+            break;
+          default:
+            await _showErrorDialog(error);
+        }
       } else {
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -74,13 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       logger.e("Login error: $e");
-      setState(() {
-        generalError = "An unexpected error occurred. Please try again.";
-      });
+      if (!mounted) return;
+      await _showErrorDialog('An unexpected error occurred. Please try again.');
     } finally {
-      setState(() {
-        isLogin = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLogin = false;
+        });
+      }
     }
   }
 
@@ -91,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -104,7 +129,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -114,8 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: size.height * 0.08),
-
-                    // App logo
                     Container(
                       height: 120,
                       width: 120,
@@ -138,10 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 40),
-
-                    // App name
                     Text(
                       "Flora Guardian",
                       style: TextStyle(
@@ -151,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         letterSpacing: 1.2,
                       ),
                     ),
-
                     SizedBox(height: 16),
-
                     Text(
                       "Your Personal Plant Care Companion",
                       textAlign: TextAlign.center,
@@ -163,10 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         letterSpacing: 0.5,
                       ),
                     ),
-
                     SizedBox(height: 50),
-
-                    // Email field
                     TextFormField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -196,10 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-
                     SizedBox(height: 16),
-
-                    // Password field
                     TextFormField(
                       controller: passwordController,
                       obscureText: isObscure,
@@ -236,7 +247,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -257,10 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 40),
-
-                    // Login button
                     isLogin
                         ? Center(
                             child: CircularProgressIndicator(
@@ -273,10 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             text: "Login",
                             textColor: Colors.white,
                           ),
-
                     SizedBox(height: 20),
-
-                    // Sign up link
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -294,7 +298,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 50),
                   ],
                 ),

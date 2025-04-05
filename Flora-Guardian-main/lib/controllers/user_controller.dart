@@ -51,6 +51,17 @@ class UserController {
       return null;
     }
   }
+  Future<bool> isUsernameTaken(String username) async {
+  try {
+    final query = await _db.collection("users")
+        .where("userName", isEqualTo: username)
+        .get();
+    return query.docs.isNotEmpty;
+  } catch (e) {
+    debugPrint("Error checking username: $e");
+    return false;
+  }
+}
 
   Future<UserModel?> getUserData() async {
     try {
