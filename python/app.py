@@ -20,7 +20,7 @@ app.add_middleware(
 # Load the model
 model = load_model("Flower_classification.h5")
 
-# Flower names (ensure these match your training)
+# Flower names 
 flower_names = ['daisy', 'dandelion', 'iris', 'rose', 'sunflower']
 
 @app.post("/predict/")
