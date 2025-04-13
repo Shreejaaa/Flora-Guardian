@@ -42,15 +42,15 @@ class UserController {
   }
 
   Future<User?> signup(String email, String password) async {
-    try {
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint(e.toString());
-      return null;
-    }
+  try {
+    UserCredential userCredential = await _auth
+        .createUserWithEmailAndPassword(email: email, password: password);
+    return userCredential.user;
+  } on FirebaseAuthException catch (e) {
+    debugPrint(e.toString()); // Keep this for console logging
+    rethrow; // Changed from "return null" to "rethrow" to propagate the exception
   }
+}
   Future<bool> isUsernameTaken(String username) async {
   try {
     final query = await _db.collection("users")
