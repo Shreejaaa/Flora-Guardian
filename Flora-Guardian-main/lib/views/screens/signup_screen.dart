@@ -58,7 +58,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      // Check if username is unique (this needs proper implementation in UserController)
+      // Check if username is unique 
       bool isUsernameAvailable = await _isUsernameUnique(usernameController.text);
       if (!isUsernameAvailable) {
         await _showErrorDialog('This username is already taken');
